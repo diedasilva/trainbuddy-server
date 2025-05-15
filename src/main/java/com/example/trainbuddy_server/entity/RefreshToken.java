@@ -25,13 +25,16 @@ public class RefreshToken {
     @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
 
-    @Column(nullable = false)
-    private boolean revoked = false;
+    @Column(name = "revoked_at", nullable = true)
+    private Instant revokedAt;
 
+    @Column(name = "device_id", length = 100, nullable = true)
+    private String deviceId;
+
+    // getters & setters
     public String getToken() {
         return token;
     }
-
     public void setToken(String token) {
         this.token = token;
     }
@@ -39,7 +42,6 @@ public class RefreshToken {
     public Users getUser() {
         return user;
     }
-
     public void setUser(Users user) {
         this.user = user;
     }
@@ -47,16 +49,25 @@ public class RefreshToken {
     public Instant getExpiresAt() {
         return expiresAt;
     }
-
     public void setExpiresAt(Instant expiresAt) {
         this.expiresAt = expiresAt;
     }
 
-    public boolean isRevoked() {
-        return revoked;
+    public Instant getRevokedAt() {
+        return revokedAt;
+    }
+    public void setRevokedAt(Instant revokedAt) {
+        this.revokedAt = revokedAt;
     }
 
-    public void setRevoked(boolean revoked) {
-        this.revoked = revoked;
+    public String getDeviceId() {
+        return deviceId;
+    }
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
+    }
+    
+    public boolean isRevoked() {
+        return revokedAt != null;
     }
 }

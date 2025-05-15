@@ -8,7 +8,7 @@ import com.example.trainbuddy_server.entity.RefreshToken;
 
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, String> {
 
-    Optional<RefreshToken> findByTokenAndRevokedFalse(String token);
+    Optional<RefreshToken> findByTokenAndRevokedAtIsNull(String token);
 
-    void deleteByUserId(Long userId);
+    void deleteAllByUserId(Long userId);
 }

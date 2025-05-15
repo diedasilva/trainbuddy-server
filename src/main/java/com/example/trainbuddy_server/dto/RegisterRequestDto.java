@@ -1,10 +1,10 @@
 package com.example.trainbuddy_server.dto;
 
+import com.example.trainbuddy_server.entity.Role;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-
-import com.example.trainbuddy_server.entity.Role;
 
 public class RegisterRequestDto {
 
@@ -23,6 +23,8 @@ public class RegisterRequestDto {
 
     @NotNull(message = "Le flag isCoach est obligatoire")
     private Boolean isCoach;
+    
+    private String deviceId;
 
     // ========== Getters ==========
     public String getUsername() {
@@ -45,6 +47,10 @@ public class RegisterRequestDto {
         return isCoach;
     }
 
+    public String getDeviceId() {
+        return deviceId;
+    }
+
     // ========== Setters ==========
     public void setUsername(String username) {
         this.username = username;
@@ -64,5 +70,9 @@ public class RegisterRequestDto {
 
     public void setIsCoach(Boolean isCoach) {
         this.isCoach = isCoach;
+    }
+
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
     }
 }

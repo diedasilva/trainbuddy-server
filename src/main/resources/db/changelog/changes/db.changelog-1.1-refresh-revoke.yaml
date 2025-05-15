@@ -33,6 +33,11 @@ databaseChangeLog:
                   defaultValueBoolean: false
                   constraints:
                     nullable: false
+              - column:
+                  name: device_id
+                  type: VARCHAR(100)
+                  defaultValue: null
+                  remarks: "UUID du device (nullable, pour future traçabilité)"
         - addForeignKeyConstraint:
             baseTableName: refresh_tokens
             baseColumnNames: user_id

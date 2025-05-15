@@ -12,24 +12,24 @@ import jakarta.persistence.Id;
 
 @Entity
 public class Users {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(unique = true, nullable = false)
     private String username;
-    
+
     @Column(unique = true, nullable = false)
     private String email;
-    
+
     @Column(nullable = false)
     private String password;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
-    
+
     @Column(name = "created_at")
     private Instant createdAt = Instant.now();
 
@@ -38,6 +38,9 @@ public class Users {
 
     @Column(nullable = false)
     private boolean isCoach;
+
+    @Column(name = "last_logout_at", nullable = true)
+    private Instant lastLogoutAt;
 
     //Getters and Setters
     public Long getId() {
@@ -91,6 +94,7 @@ public class Users {
     public Instant getUpdatedAt() {
         return updatedAt;
     }
+
     public void setUpdatedAt(Instant updatedAt) {
         this.updatedAt = updatedAt;
     }
@@ -101,5 +105,13 @@ public class Users {
 
     public void setIsCoach(boolean isCoach) {
         this.isCoach = isCoach;
+    }
+
+    public Instant getLastLogoutAt() {
+        return lastLogoutAt;
+    }
+
+    public void setLastLogoutAt(Instant lastLogoutAt) {
+        this.lastLogoutAt = lastLogoutAt;
     }
 }

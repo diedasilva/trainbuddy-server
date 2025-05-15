@@ -1,48 +1,31 @@
 package com.example.trainbuddy_server.service;
 
-import java.util.List;
 import java.util.Optional;
 
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.stereotype.Service;
-
 import com.example.trainbuddy_server.entity.Users;
-import com.example.trainbuddy_server.exception.UserConflictException;
-import com.example.trainbuddy_server.repository.UsersRepository;
 
-@Service
-public class UsersService {
+/**
+ * Service for user CRUD operations.
+ */
+public interface UsersService {
 
-    private final UsersRepository repo;
+    Optional<Users> findByUsername(String username);
 
-    public UsersService(UsersRepository repo) {
-        this.repo = repo;
-    }
+    /**
+     * Persist a new user (registration).
+     *
+     * @param user the new user to create
+     * @return the saved user entity
+     */
+    Users create(Users user);
 
-    public List<Users> getAll() {
-        return repo.findAll();
-    }
+    /**
+     * Update an existing user.
+     *
+     * @param user the user entity with updated fields
+     * @return the updated user entity
+     */
+    Users update(Users user);
 
-    public Optional<Users> findByUsername(String username) {
-        return repo.findByUsername(username);
-    }
-
-    public Optional<Users> findById(Long id) {
-        return repo.findById(id);
-    }
-
-    public Users create(Users u) {
-        try {
-            return repo.save(u);
-        } catch (DataIntegrityViolationException ex) {
-            String msg = ex.getRootCause().getMessage();
-            if (msg.contains("users_username_key")) {
-                throw new UserConflictException("Le nom d'utilisateur est déjà utilisé.");
-            }
-            if (msg.contains("users_email_key")) {
-                throw new UserConflictException("L'email est déjà utilisé.");
-            }
-            throw new UserConflictException("Conflit lors de la création de l'utilisateur.");
-        }
-    }
+    Optional<Users> findById(Long id);
 }

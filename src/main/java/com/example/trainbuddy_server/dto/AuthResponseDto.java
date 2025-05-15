@@ -1,41 +1,35 @@
 package com.example.trainbuddy_server.dto;
 
+/**
+ * DTO returned after authentication or token rotation,
+ * containing both access and refresh tokens.
+ */
 public class AuthResponseDto {
 
-    private String token;
-    private String tokenType = "Bearer";
-    private Long expiresIn;
+    private String accessToken;
+    private String refreshToken;
 
-    public AuthResponseDto() {
+    // Constructors, getters and setters
+    public AuthResponseDto() { }
+
+    public AuthResponseDto(String accessToken, String refreshToken) {
+        this.accessToken  = accessToken;
+        this.refreshToken = refreshToken;
     }
 
-    public AuthResponseDto(String token, Long expiresIn) {
-        this.token = token;
-        this.expiresIn = expiresIn;
+    public String getAccessToken() {
+        return accessToken;
     }
 
-    // Getters & Setters
-    public String getToken() {
-        return token;
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
     }
 
-    public void setToken(String token) {
-        this.token = token;
+    public String getRefreshToken() {
+        return refreshToken;
     }
 
-    public String getTokenType() {
-        return tokenType;
-    }
-
-    public void setTokenType(String tokenType) {
-        this.tokenType = tokenType;
-    }
-
-    public Long getExpiresIn() {
-        return expiresIn;
-    }
-
-    public void setExpiresIn(Long expiresIn) {
-        this.expiresIn = expiresIn;
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
     }
 }
