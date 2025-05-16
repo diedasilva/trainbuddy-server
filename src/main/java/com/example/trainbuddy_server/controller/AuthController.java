@@ -1,5 +1,7 @@
 package com.example.trainbuddy_server.controller;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -61,7 +63,11 @@ public class AuthController {
         user.setIsCoach(req.getIsCoach());
 
         Users saved = usersService.create(user);
-        String accessToken = jwtUtil.generateToken(saved.getUsername(), saved.getId());
+        String accessToken = jwtUtil.generateToken(
+                saved.getUsername(),
+                saved.getId(),
+                List.of(saved.getRole().name())
+        );
         RefreshToken rt = tokenService.createRefreshToken(saved.getId(), req.getDeviceId());
 
         return ResponseEntity.ok(new AuthResponseDto(accessToken, rt.getToken()));
@@ -81,7 +87,11 @@ public class AuthController {
         );
         Users user = usersService.findByUsername(req.getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        String accessToken = jwtUtil.generateToken(user.getUsername(), user.getId());
+        String accessToken = jwtUtil.generateToken(
+                user.getUsername(),
+                user.getId(),
+                List.of(user.getRole().name())
+        );
         RefreshToken rt = tokenService.createRefreshToken(user.getId(), req.getDeviceId());
 
         return ResponseEntity.ok(new AuthResponseDto(accessToken, rt.getToken()));
@@ -99,7 +109,11 @@ public class AuthController {
     public ResponseEntity<AuthResponseDto> refresh(@Valid @RequestBody RefreshRequestDto body) {
         RefreshToken newRt = tokenService.rotateRefreshToken(body.getRefreshToken());
         Users user = newRt.getUser();
-        String accessToken = jwtUtil.generateToken(user.getUsername(), user.getId());
+        String accessToken = jwtUtil.generateToken(
+                user.getUsername(),
+                user.getId(),
+                List.of(user.getRole().name())
+        );
         return ResponseEntity.ok(new AuthResponseDto(accessToken, newRt.getToken()));
     }
 

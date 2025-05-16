@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1.2.0
+      author: DiegoDSM
+      preConditions:
+        onFail: MARK_RAN
+        not:
+          columnExists:
+            tableName: users
+            columnName: last_logout_at
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: last_logout_at
+                  type: TIMESTAMP
+                  remarks: "Timestamp to track admin-forced logout (invalidate existing access tokens)"
+                  defaultValueComputed: NULL

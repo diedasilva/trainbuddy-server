@@ -1,16 +1,22 @@
 package com.example.trainbuddy_server.security;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.time.Instant;
+import java.util.List;
+import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.example.trainbuddy_server.entity.Users;
 import com.example.trainbuddy_server.repository.RevokedTokenRepository;
+import com.example.trainbuddy_server.service.UsersService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -20,11 +26,17 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
-    @Autowired
-    private JwtUtil jwtUtil;
+    private final JwtUtil jwtUtil;
+    private final RevokedTokenRepository revokedRepo;
+    private final UsersService usersService;
 
-    @Autowired
-    private RevokedTokenRepository revokedRepo;
+    public JwtFilter(JwtUtil jwtUtil,
+                     RevokedTokenRepository revokedRepo,
+                     UsersService usersService) {
+        this.jwtUtil = jwtUtil;
+        this.revokedRepo = revokedRepo;
+        this.usersService = usersService;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -32,34 +44,40 @@ public class JwtFilter extends OncePerRequestFilter {
                                     FilterChain chain)
             throws ServletException, IOException {
 
-        final String authHeader = request.getHeader("Authorization");
-        String jwt = null;
-        String username = null;
+        String authHeader = request.getHeader("Authorization");
 
-        // Récupération du token
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            jwt = authHeader.substring(7);
-            username = jwtUtil.extractUsername(jwt);
-        }
+            String token = authHeader.substring(7);
+            if (jwtUtil.validateToken(token)) {
+                String username = jwtUtil.extractUsername(token);
+                String jti = jwtUtil.extractJti(token);
 
-        // Si pas encore authentifié dans le contexte et qu'un username existe
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            // Vérification de la signature et de l'expiration
-            if (jwtUtil.validateToken(jwt)) {
-                // Extraction du JTI et vérification qu'il n'est pas dans revoked_tokens
-                String jti = jwtUtil.extractJti(jwt);
-                boolean isRevoked = revokedRepo.existsById(jti);
-
-                if (!isRevoked) {
-                    // Création d'un AuthenticationToken sans authorities (à adapter si tu gères des rôles)
-                    UsernamePasswordAuthenticationToken authToken =
-                            new UsernamePasswordAuthenticationToken(username, null, Collections.emptyList());
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
-                } else {
-                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token révoqué");
+                // 1) Blacklist check
+                if (revokedRepo.existsById(jti)) {
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token revoked");
                     return;
                 }
+
+                // 2) Admin-forced logout check
+                Instant issuedAt = jwtUtil.extractIssuedAt(token);
+                Users user = usersService.findByUsername(username)
+                        .orElseThrow(() -> new UsernameNotFoundException(username));
+                Instant lastLogout = user.getLastLogoutAt();
+                if (lastLogout != null && issuedAt.isBefore(lastLogout)) {
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token invalidated by admin");
+                    return;
+                }
+
+                // 3) Extract roles and create authorities
+                List<GrantedAuthority> auths = jwtUtil.extractRoles(token).stream()
+                        .map(r -> new SimpleGrantedAuthority("ROLE_" + r))
+                        .collect(Collectors.toList());
+
+                // 4) Build Authentication and set in context
+                UsernamePasswordAuthenticationToken auth =
+                        new UsernamePasswordAuthenticationToken(username, null, auths);
+                auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(auth);
             }
         }
 
